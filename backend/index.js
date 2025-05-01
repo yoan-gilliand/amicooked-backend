@@ -23,11 +23,6 @@ require('dotenv').config({ path: `.env.${environment}` });
 
 const port = process.env.APP_PORT;
 
-app.use('/sectors', require('./routes/sectors.js'));
-app.use('/prices', require('./routes/prices.js'));
-app.use('/demands', require('./routes/demands.js'));
-app.use('/gateway-url', require('./routes/gatewayUrl.js'));
-
 const logger = require('./utils/logger');
 
 app.listen(port, () => {

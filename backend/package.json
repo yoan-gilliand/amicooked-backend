@@ -10,16 +10,13 @@
   "author": "Yoan Gilliand",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.7.1",
+    "axios": "^1.9.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "json2csv": "^6.0.0-alpha.2",
-    "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.9.7",
-    "nodemailer": "^6.9.13",
-    "uuid": "^9.0.1",
-    "winston": "^3.13.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.1",
+    "uuid": "^11.1.0",
+    "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   }
 }
