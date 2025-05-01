@@ -23,6 +23,8 @@ require('dotenv').config({ path: `.env.${environment}` });
 
 const port = process.env.APP_PORT;
 
+app.use('/users', require('./routes/users.js'));
+
 const logger = require('./utils/logger');
 
 app.listen(port, () => {
