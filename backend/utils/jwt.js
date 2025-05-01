@@ -6,8 +6,15 @@ const jwt = require('jsonwebtoken');
  * @param {string} role - Le rôle de l'utilisateur (user/admin).
  * @returns {string} - Le token JWT signé.
  */
-const generateToken = (username, role) => {
-  const payload = { username, role };
+const generateToken = (name, username, email, role, score, classId) => {
+  const payload = {
+    name,
+    username,
+    email,
+    role,
+    score,
+    classId,
+  }; // Créer le payload avec les informations de l'utilisateur
   const secret = 'secret';
   const options = { expiresIn: '24h' };
 

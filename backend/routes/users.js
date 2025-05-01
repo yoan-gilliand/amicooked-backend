@@ -53,7 +53,14 @@ router.post('/register', validateRegisterForm, async (req, res) => {
     await db.createUser(newUser);
 
     // Générer le token JWT pour l'utilisateur créé
-    const token = generateToken(newUser.username, newUser.role);
+    const token = generateToken(
+      newUser.name,
+      newUser.username,
+      newUser.email,
+      newUser.role,
+      '0',
+      newUser.classId,
+    );
 
     // Réponse avec le token et l'utilisateur créé
     logger.info(`User created: ${JSON.stringify(newUser)}`);
@@ -83,7 +90,14 @@ router.post('/login', validateLoginForm, async (req, res) => {
     }
 
     // Générer le token JWT
-    const token = generateToken(user.username, user.role);
+    const token = generateToken(
+      user.name,
+      user.username,
+      user.email,
+      user.role,
+      user.score,
+      user.id_classroom,
+    );
 
     // Retourner le token au client
     res.status(200).json({ message: 'Login successful', token });
