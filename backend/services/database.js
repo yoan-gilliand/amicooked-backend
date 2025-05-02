@@ -1,115 +1,162 @@
-const mysql = require('mysql2/promise');
+const Database = require('better-sqlite3');
+const path = require('path');
 const logger = require('../utils/logger');
 
-// Create a connection pool using the environment variables for the database configuration
-const pool = mysql.createPool({
-  host: process.env.DB_HOST, // Database host
-  user: process.env.DB_USER, // Database user
-  password: process.env.DB_PASSWORD, // Database user's password
-  database: process.env.DB_NAME, // Database name
-});
+// Crée ou ouvre la base de données SQLite
+const db = new Database(path.resolve(__dirname, '../db/database.sqlite'));
 
-/**
- * @function getClassById
- * @param {string} classId - The ID of the class.
- * @description Checks if a class exists in the database.
- * @returns {boolean} - True if class exists, false otherwise.
- */
-const getClassById = async (classId) => {
-  const [rows] = await pool.query('SELECT * FROM classroom WHERE id = ?', [
-    classId,
-  ]);
-  return rows.length > 0; // Returns true if class exists, false otherwise
-};
+// Active le support des clés étrangères (désactivé par défaut dans SQLite)
+db.exec('PRAGMA foreign_keys = ON');
 
-/**
- * @function createClass
- * @param {string} className - The name of the class to create.
- * @param {string} classId - The ID of the class to create.
- * @description Creates a new class in the database.
- * @returns {object} - The created class object.
- * @throws Will throw an error if the database query fails.
- */
-const createClass = async (classId, className) => {
+// Création des tables
+db.exec(`
+  -- Table classroom
+  CREATE TABLE IF NOT EXISTS classroom (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL
+  );
+
+  -- Table user
+  CREATE TABLE IF NOT EXISTS user (
+    username TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
+    score INTEGER DEFAULT 0,
+    id_classroom TEXT,
+    FOREIGN KEY (id_classroom) REFERENCES classroom(id) ON DELETE SET NULL
+  );
+
+  -- Table exam
+  CREATE TABLE IF NOT EXISTS exam (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    id_classroom TEXT NOT NULL,
+    FOREIGN KEY (id_classroom) REFERENCES classroom(id) ON DELETE CASCADE
+  );
+
+  -- Table bet
+  CREATE TABLE IF NOT EXISTS bet (
+    id_exam INTEGER NOT NULL,
+    id_user TEXT NOT NULL,
+    grade REAL NOT NULL CHECK (grade >= 1.0 AND grade <= 6.0),
+    PRIMARY KEY (id_exam, id_user),
+    FOREIGN KEY (id_exam) REFERENCES exam(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_user) REFERENCES user(username) ON DELETE CASCADE
+  );
+
+  -- Table result
+  CREATE TABLE IF NOT EXISTS result (
+    id_exam INTEGER NOT NULL,
+    id_user TEXT NOT NULL,
+    grade REAL NOT NULL CHECK (grade >= 1.0 AND grade <= 6.0),
+    PRIMARY KEY (id_exam, id_user),
+    FOREIGN KEY (id_exam) REFERENCES exam(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_user) REFERENCES user(username) ON DELETE CASCADE
+  );
+`);
+
+logger.info('SQLite database initialized');
+
+// Exemples de fonctions pour interagir avec la base de données
+
+// Ajouter une classe
+const createClass = (classId, className) => {
   try {
-    const [rows] = await pool.query(
-      'INSERT INTO classroom (id, name) VALUES (?, ?)',
-      [classId, className],
-    );
-    logger.info(`Class created: ${JSON.stringify(rows)}`);
-    return rows;
+    const stmt = db.prepare('INSERT INTO classroom (id, name) VALUES (?, ?)');
+    const info = stmt.run(classId, className);
+    logger.info(`Class created: ${JSON.stringify(info)}`);
+    return info;
   } catch (error) {
     logger.error(`Error creating class: ${error.message}`);
     throw error;
   }
 };
 
-/**
- * @function createUser
- * @param {object} user - User object avec username, name, email, passwordHash, role, classId.
- */
-const createUser = async (user) => {
+// Obtenir une classe par son ID
+const getClassById = (classId) => {
+  const stmt = db.prepare('SELECT * FROM classroom WHERE id = ?');
+  const row = stmt.get(classId);
+  return row || null;
+};
+
+// Ajouter un utilisateur
+const createUser = (user) => {
   try {
-    const [rows] = await pool.query(
-      `INSERT INTO user (username, name, email, password_hash, role, score, id_classroom)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        user.username, // Utilisation de username comme clé primaire
-        user.name,
-        user.email,
-        user.passwordHash,
-        user.role,
-        0, // Default score
-        user.classId,
-      ],
+    const stmt = db.prepare(`
+      INSERT INTO user (username, name, email, password_hash, role, score, id_classroom)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    const info = stmt.run(
+      user.username,
+      user.name,
+      user.email,
+      user.passwordHash,
+      user.role,
+      0, // Default score
+      user.classId
     );
-    return rows;
+    logger.info(`User created: ${user.username}`);
+    return info;
   } catch (error) {
     logger.error(`Error creating user: ${error.message}`);
     throw error;
   }
 };
 
-/**
- * @function getUserByUsername
- * @param {string} username - Le username à vérifier.
- * @description Vérifie si un utilisateur existe avec le `username`.
- * @returns {object|null} - L'utilisateur trouvé ou null si non trouvé.
- */
-const getUserByUsername = async (username) => {
+// Obtenir un utilisateur par son username
+const getUserByUsername = (username) => {
+  const stmt = db.prepare('SELECT * FROM user WHERE username = ?');
+  const row = stmt.get(username);
+  return row || null;
+};
+
+// Obtenir un utilisateur par son email
+const getUserByEmail = (email) => {
+  const stmt = db.prepare('SELECT * FROM user WHERE email = ?');
+  const row = stmt.get(email);
+  return row || null;
+};
+
+// Ajouter un pari (bet)
+const createBet = (examId, username, grade) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM user WHERE username = ?', [
-      username,
-    ]);
-    return rows.length > 0 ? rows[0] : null; // Si un utilisateur est trouvé, retourne le premier utilisateur.
+    const stmt = db.prepare(`
+      INSERT INTO bet (id_exam, id_user, grade)
+      VALUES (?, ?, ?)
+    `);
+    const info = stmt.run(examId, username, grade);
+    logger.info(`Bet created: Exam ID = ${examId}, User = ${username}, Grade = ${grade}`);
+    return info;
   } catch (error) {
-    logger.error(`Error checking username availability: ${error.message}`);
+    logger.error(`Error creating bet: ${error.message}`);
     throw error;
   }
 };
 
-/**
- * @function getUserByEmail
- * @param {string} email - L'email à vérifier.
- * @description Vérifie si un utilisateur existe avec l'email spécifié.
- * @returns {object|null} - L'utilisateur trouvé ou null si non trouvé.
- */
-const getUserByEmail = async (email) => {
+// Ajouter un résultat (result)
+const createResult = (examId, username, grade) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM user WHERE email = ?', [
-      email,
-    ]);
-    return rows.length > 0 ? rows[0] : null; // Si un utilisateur est trouvé, retourne le premier utilisateur.
+    const stmt = db.prepare(`
+      INSERT INTO result (id_exam, id_user, grade)
+      VALUES (?, ?, ?)
+    `);
+    const info = stmt.run(examId, username, grade);
+    logger.info(`Result created: Exam ID = ${examId}, User = ${username}, Grade = ${grade}`);
+    return info;
   } catch (error) {
-    logger.error(`Error checking email availability: ${error.message}`);
+    logger.error(`Error creating result: ${error.message}`);
     throw error;
   }
 };
 
 module.exports = {
   createClass,
-  createUser,
   getClassById,
+  createUser,
   getUserByUsername,
   getUserByEmail,
+  createBet,
+  createResult,
 };
