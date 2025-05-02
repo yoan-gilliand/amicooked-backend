@@ -9,7 +9,7 @@ const {
 const { hash } = require('bcrypt');
 
 const { compare } = require('bcryptjs');
-const { generateToken } = require('../utils/jwt'); // Importe la fonction de génération du token
+const { generateToken, verifyToken } = require('../utils/jwt'); // Importe la fonction de génération du token
 
 router.post('/register', validateRegisterForm, async (req, res) => {
   const { name, username, email, password, classId, className } = req.body;
@@ -106,5 +106,22 @@ router.post('/login', validateLoginForm, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+router.get('/tokenvalidity', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = verifyToken(token); // Vérifie la signature et l’expiration
+    res.status(200).json(decoded); // Renvoie le payload
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+});
+
 
 module.exports = router;

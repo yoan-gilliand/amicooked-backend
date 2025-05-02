@@ -21,4 +21,8 @@ const generateToken = (name, username, email, role, score, classId) => {
   return jwt.sign(payload, secret, options); // Générer le token
 };
 
-module.exports = { generateToken };
+function verifyToken(token) {
+  return jwt.verify(token, "secret");
+}
+
+module.exports = { generateToken, verifyToken };
