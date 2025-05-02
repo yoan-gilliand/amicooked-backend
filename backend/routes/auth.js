@@ -18,13 +18,13 @@ router.post('/register', validateRegisterForm, async (req, res) => {
     // Vérifier si le username existe déjà dans la base de données
     const existingUser = await db.getUserByUsername(username);
     if (existingUser) {
-      return res.status(400).json({ error: 'Username is already taken' });
+      return res.status(409).json({ error: 'Username is already taken' });
     }
 
     // Vérifier si l'email existe déjà dans la base de données
     const existingEmail = await db.getUserByEmail(email);
     if (existingEmail) {
-      return res.status(400).json({ error: 'Email is already registered' });
+      return res.status(409).json({ error: 'Email is already registered' });
     }
 
     const newUser = {
@@ -39,6 +39,11 @@ router.post('/register', validateRegisterForm, async (req, res) => {
     if (classId) {
       newUser.classId = classId;
       newUser.role = 'user';
+      // Vérifier si la classe existe déjà
+      const existingClass = await db.getClassById(classId);
+      if (!existingClass) {
+        return res.status(400).json({ error: "Class doesn't exist" });
+      }
     } else if (className) {
       newUser.classId = Math.floor(100000 + Math.random() * 900000).toString();
       await db.createClass(newUser.classId, className);
@@ -80,13 +85,13 @@ router.post('/login', validateLoginForm, async (req, res) => {
     const user = await db.getUserByUsername(username);
 
     if (!user) {
-      return res.status(400).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Comparer le mot de passe hashé avec celui envoyé par l'utilisateur
     const isPasswordValid = await compare(password, user.password_hash);
     if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Générer le token JWT
@@ -122,6 +127,5 @@ router.get('/tokenvalidity', (req, res) => {
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 });
-
 
 module.exports = router;
