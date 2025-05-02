@@ -32,6 +32,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS exam (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    date DATE NOT NULL,
     id_classroom TEXT NOT NULL,
     FOREIGN KEY (id_classroom) REFERENCES classroom(id) ON DELETE CASCADE
   );
@@ -120,7 +121,8 @@ const getUserByEmail = (email) => {
 };
 
 // Ajouter un pari (bet)
-const createBet = (examId, username, grade) => {
+const createBet = (examId, grade, username) => {
+  console.log('Creating bet:', { examId, grade, username });
   try {
     const stmt = db.prepare(`
       INSERT INTO bet (id_exam, id_user, grade)
@@ -136,7 +138,7 @@ const createBet = (examId, username, grade) => {
 };
 
 // Ajouter un résultat (result)
-const createResult = (examId, username, grade) => {
+const createResult = (examId, grade, username) => {
   try {
     const stmt = db.prepare(`
       INSERT INTO result (id_exam, id_user, grade)
@@ -151,6 +153,46 @@ const createResult = (examId, username, grade) => {
   }
 };
 
+// Ajouter un examen
+const createExam = (exam) => {
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO exam (name, date, id_classroom)
+      VALUES (?, ?, ?)
+    `);
+    const info = stmt.run(exam.name, exam.date, exam.classId);
+    logger.info(`Exam created: ${JSON.stringify(info)}`);
+    return info;
+  } catch (error) {
+    logger.error(`Error creating exam: ${error.message}`);
+    throw error;
+  }
+};
+
+// Obtenir un pari par ID d'examen et nom d'utilisateur
+const getBetByExamIdAndUsername = (examId, username) => {
+  const stmt = db.prepare(`
+    SELECT * FROM bet WHERE id_exam = ? AND id_user = ?
+  `);
+  const row = stmt.get(examId, username);
+  return row || null;
+};
+
+// Mettre à jour le score d'un utilisateur
+const updateUserScore = (username, score) => {
+  try {
+    const stmt = db.prepare(`
+      UPDATE user SET score = ? WHERE username = ?
+    `);
+    const info = stmt.run(score, username);
+    logger.info(`User score updated: ${username}, New Score = ${score}`);
+    return info;
+  } catch (error) {
+    logger.error(`Error updating user score: ${error.message}`);
+    throw error;
+  }
+};
+
 module.exports = {
   createClass,
   getClassById,
@@ -159,4 +201,7 @@ module.exports = {
   getUserByEmail,
   createBet,
   createResult,
+  createExam,
+  getBetByExamIdAndUsername,
+  updateUserScore,
 };

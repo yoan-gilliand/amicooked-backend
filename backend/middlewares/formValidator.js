@@ -47,6 +47,15 @@ const validateClass = (classId, className) => {
   return null;
 };
 
+// Validation function for the date
+const validateDate = (date) => {
+  if (!date) return errorMsg('Date is required');
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date))
+    return errorMsg('Date must be in YYYY-MM-DD format');
+  return null;
+};
+
 const validateRegisterForm = (req, res, next) => {
   const { name, username, email, password, classId, className } =
     req.body || {};
@@ -88,7 +97,79 @@ const validateLoginForm = (req, res, next) => {
   next();
 };
 
+const validateExamForm = (req, res, next) => {
+  const { name, date } = req.body || {};
+
+  // Validate each field
+  const validators = [validateName(name), validateDate(date)];
+
+  // Filter out null values (validations that passed)
+  const errors = validators.filter((error) => error !== null);
+
+  if (errors.length > 0) {
+    logger.error(errors);
+    return res.status(400).json({ errors });
+  }
+
+  next();
+};
+
+
+// Validation function for the examId
+const validateBetId = (examId) => {
+  if (!examId) return errorMsg('Exam ID is required');
+  if (typeof examId !== 'number')
+    return errorMsg('Exam ID must be a number');
+  return null;
+};
+
+// Validation function for the grade
+const validateGrade = (grade) => {
+  if (!grade) return errorMsg('Grade is required');
+  const gradeRegex = /^(?:[1-5](?:\.\d)?|6(?:\.0)?)$/;
+  if (!gradeRegex.test(grade))
+    return errorMsg('Grade must be between 1.0 and 6.0');
+  return null;
+};
+
+const validateBetForm = (req, res, next) => {
+  const { examId, grade } = req.body || {};
+
+  // Validate each field
+  const validators = [validateBetId(examId), validateGrade(grade)];
+
+  // Filter out null values (validations that passed)
+  const errors = validators.filter((error) => error !== null);
+
+  if (errors.length > 0) {
+    logger.error(errors);
+    return res.status(400).json({ errors });
+  }
+
+  next();
+}
+
+const validateResultForm = (req, res, next) => {
+  const { examId, grade } = req.body || {};
+
+  // Validate each field
+  const validators = [validateBetId(examId), validateGrade(grade)];
+
+  // Filter out null values (validations that passed)
+  const errors = validators.filter((error) => error !== null);
+
+  if (errors.length > 0) {
+    logger.error(errors);
+    return res.status(400).json({ errors });
+  }
+
+  next();
+}
+
 module.exports = {
   validateRegisterForm,
   validateLoginForm,
+  validateExamForm,
+  validateBetForm,
+  validateResultForm
 };
