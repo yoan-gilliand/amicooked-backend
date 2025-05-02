@@ -96,7 +96,7 @@ const createUser = (user) => {
       user.passwordHash,
       user.role,
       0, // Default score
-      user.classId
+      user.classId,
     );
     logger.info(`User created: ${user.username}`);
     return info;
@@ -129,7 +129,9 @@ const createBet = (examId, grade, username) => {
       VALUES (?, ?, ?)
     `);
     const info = stmt.run(examId, username, grade);
-    logger.info(`Bet created: Exam ID = ${examId}, User = ${username}, Grade = ${grade}`);
+    logger.info(
+      `Bet created: Exam ID = ${examId}, User = ${username}, Grade = ${grade}`,
+    );
     return info;
   } catch (error) {
     logger.error(`Error creating bet: ${error.message}`);
@@ -145,7 +147,9 @@ const createResult = (examId, grade, username) => {
       VALUES (?, ?, ?)
     `);
     const info = stmt.run(examId, username, grade);
-    logger.info(`Result created: Exam ID = ${examId}, User = ${username}, Grade = ${grade}`);
+    logger.info(
+      `Result created: Exam ID = ${examId}, User = ${username}, Grade = ${grade}`,
+    );
     return info;
   } catch (error) {
     logger.error(`Error creating result: ${error.message}`);
@@ -193,6 +197,15 @@ const updateUserScore = (username, score) => {
   }
 };
 
+// Obtenir la liste des utilisateurs d'une classe et leur score
+const getUsersByClassId = (classId) => {
+  const stmt = db.prepare(`
+    SELECT username, score FROM user WHERE id_classroom = ?
+  `);
+  const rows = stmt.all(classId);
+  return rows || [];
+};
+
 module.exports = {
   createClass,
   getClassById,
@@ -204,4 +217,5 @@ module.exports = {
   createExam,
   getBetByExamIdAndUsername,
   updateUserScore,
+  getUsersByClassId,
 };

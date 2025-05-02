@@ -7,7 +7,13 @@ const corsOptions = {
   origin: 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+  ],
 };
 
 app.use(cors(corsOptions));
@@ -21,6 +27,7 @@ app.use('/auth', require('./routes/auth.js'));
 app.use('/exams', require('./routes/exams.js'));
 app.use('/bets', require('./routes/bets.js'));
 app.use('/results', require('./routes/results.js'));
+app.use('/users', require('./routes/users.js'));
 
 const logger = require('./utils/logger');
 
