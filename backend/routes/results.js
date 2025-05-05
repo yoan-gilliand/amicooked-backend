@@ -7,7 +7,7 @@ const {
 } = require('../middlewares/formValidator');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 
-// Route de connexion
+// Route pour sauvegarder le résultat d'un examen
 router.post('/', isAuthenticated, validateResultForm, async (req, res) => {
   const { examId, grade } = req.body;
   const { username, score } = req.user;
@@ -20,24 +20,27 @@ router.post('/', isAuthenticated, validateResultForm, async (req, res) => {
       username,
     };
 
-    // Sauvegarder le pari dans la base de données
+    // Sauvegarder le résultat de l'examen
     await db.createResult(newBet.examId, newBet.grade, newBet.username);
 
-    // Get the bet of the user on the specific exam
+    // Récupérer le pari de l'utilisateur
     const bet = await db.getBetByExamIdAndUsername(newBet.examId, newBet.username);
 
-    // Calculate the scoreToAdd using this formula max(0, 10 - round(2 * abs(pari - resultat)))
-    const scoreToAdd = Math.max(0, 10 - Math.round(2 * Math.abs(bet.grade - newBet.grade)));
+    let scoreToAdd = 0;
+    if (bet && bet.grade !== undefined && bet.grade !== null) {
+      scoreToAdd = Math.max(0, 10 - Math.round(2 * Math.abs(bet.grade - newBet.grade)));
+    }
 
-    // Update the score of the user
-    await db.updateUserScore(username, score + scoreToAdd);
+    // Mettre à jour le score uniquement si scoreToAdd > 0
+    if (scoreToAdd > 0) {
+      await db.updateUserScore(username, score + scoreToAdd);
+    }
 
     return res.status(201).json({ message: 'Result created successfully' });
   } catch (error) {
     logger.error("" + error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-
 });
 
 module.exports = router;
