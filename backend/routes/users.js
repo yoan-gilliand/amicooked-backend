@@ -22,4 +22,21 @@ router.get('/class', isAuthenticated, async (req, res) => {
   }
 });
 
+// Route pour récupérer les détails de la classe de l'utilisateur
+router.get('/ownclass', isAuthenticated, async (req, res) => {
+  try {
+    // Récupérer les détails de la classe de l'utilisateur
+    const classDetails = await db.getClassById(req.user.classId);
+
+    if (!classDetails) {
+      return res.status(404).json({ error: 'Class not found' });
+    }
+
+    return res.status(200).json(classDetails);
+  } catch (error) {
+    logger.error('' + error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
