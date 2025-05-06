@@ -36,7 +36,7 @@ router.post('/', isAuthenticated, validateResultForm, async (req, res) => {
       await db.updateUserScore(username, score + scoreToAdd);
     }
 
-    return res.status(201).json({ message: 'Result created successfully' });
+    return res.status(201).json({ message: 'Result created successfully', score : scoreToAdd });
   } catch (error) {
     logger.error("" + error);
     return res.status(500).json({ error: 'Internal server error' });
