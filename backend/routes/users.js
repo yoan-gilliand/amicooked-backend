@@ -6,7 +6,7 @@ const { validateExamForm } = require('../middlewares/formValidator');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 
 // Route pour récupérer la liste des utilisateurs d'une classe, et leur score
-router.get('/class', isAuthenticated, async (req, res) => {
+router.get('/classusers', isAuthenticated, async (req, res) => {
   try {
     // Récupérer la liste des utilisateurs d'une classe
     const users = await db.getUsersByClassId(req.user.classId);
@@ -23,7 +23,7 @@ router.get('/class', isAuthenticated, async (req, res) => {
 });
 
 // Route pour récupérer les détails de la classe de l'utilisateur
-router.get('/ownclass', isAuthenticated, async (req, res) => {
+router.get('/classinfos', isAuthenticated, async (req, res) => {
   try {
     // Récupérer les détails de la classe de l'utilisateur
     const classDetails = await db.getClassById(req.user.classId);
