@@ -13,11 +13,16 @@ const validateName = (name) => {
   return null;
 };
 
-// Validation function for the username
+// Validation function for the username, can only contain alphanumeric characters, numbers, and underscores
 const validateUsername = (username) => {
   if (!username) return errorMsg('Username is required');
   if (username.length > 50)
     return errorMsg('Username must be less than 50 characters');
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
+  if (!usernameRegex.test(username))
+    return errorMsg(
+      'Username can only contain letters, numbers, and underscores'
+    );
   return null;
 };
 
