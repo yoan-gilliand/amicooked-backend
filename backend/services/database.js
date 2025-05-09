@@ -228,6 +228,18 @@ const getPastExamsWithoutResults = (username) => {
   return rows || [];
 };
 
+// Obtenir tous les résultats d'un utilisateur
+const getResultsByUsername = (username) => {
+  const stmt = db.prepare(`
+    SELECT e.id, e.name, e.date, r.grade FROM result r
+    JOIN exam e ON r.id_exam = e.id
+    WHERE r.id_user = ?
+  `);
+  const rows = stmt.all(username);
+  return rows || [];
+};
+
+
 module.exports = {
   createClass,
   getClassById,
@@ -242,4 +254,5 @@ module.exports = {
   getUsersByClassId,
   getUpcomingExams,
   getPastExamsWithoutResults,
+  getResultsByUsername,
 };

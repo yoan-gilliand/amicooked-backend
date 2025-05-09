@@ -43,4 +43,59 @@ router.post('/', isAuthenticated, validateResultForm, async (req, res) => {
   }
 });
 
+// Route pour récupérer tous les résultats d'un utilisateur
+// Calculer le score obtenu en fonction du pronostic qui avait été effectué selon la formule Math.max(0, 10 - Math.round(2 * Math.abs(bet.grade - newBet.grade)));
+// Retourner un tableau avec le score obtenu à l'examen, son nom et sa date
+router.get('/score-evolution', isAuthenticated, async (req, res) => {
+  const { username } = req.user;
+
+  try {
+    // Récupérer tous les résultats de l'utilisateur
+    const results = await db.getResultsByUsername(username);
+
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: 'No results found for this user' });
+    }
+
+    // Trier les résultats par date croissante
+    results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+    // Calculer le score pour chaque résultat
+    let totalScore = 0;
+    const scores = results.map(result => {
+      const bet = db.getBetByExamIdAndUsername(result.id, username);
+      let score = 0;
+      if (bet && bet.grade !== undefined && bet.grade !== null) {
+        score = Math.max(0, 10 - Math.round(2 * Math.abs(bet.grade - result.grade)));
+      }
+      return {
+        date: result.date,
+        score: totalScore+= score,
+      };
+    });
+
+    // Supprimer les doublons en fonction de la date en gardant le score le plus élevé
+    const uniqueScores = [];
+    const seenDates = new Set();
+    scores.forEach(item => {
+      if (!seenDates.has(item.date)) {
+        seenDates.add(item.date);
+        uniqueScores.push(item);
+      } else {
+        const existingItem = uniqueScores.find(i => i.date === item.date);
+        if (item.score > existingItem.score) {
+          existingItem.score = item.score;
+        }
+      }
+    });
+
+
+    return res.status(200).json(uniqueScores);
+  } catch (error) {
+    logger.error("" + error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
