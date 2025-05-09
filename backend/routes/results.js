@@ -130,4 +130,49 @@ router.get('/comparative', isAuthenticated, async (req, res) => {
   }
 });
 
+// Get results distribution 1.0-2-0, 2.1-3.0, 3.1-4.0, 4.1-5.0, 5.1-6.0
+router.get('/distribution', isAuthenticated, async (req, res) => {
+  const { username } = req.user;
+
+  try {
+    // Récupérer tous les résultats de l'utilisateur
+    const results = await db.getResultsByUsername(username);
+
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: 'No results found for this user' });
+    }
+
+    // Trier les résultats par date croissante
+    results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculer la distribution des résultats
+    const distribution = {
+      '1.0-2.0': 0,
+      '2.1-3.0': 0,
+      '3.1-4.0': 0,
+      '4.1-5.0': 0,
+      '5.1-6.0': 0,
+    };
+
+    results.forEach(result => {
+      if (result.grade >= 1 && result.grade <= 2) {
+        distribution['1.0-2.0']++;
+      } else if (result.grade > 2 && result.grade <= 3) {
+        distribution['2.1-3.0']++;
+      } else if (result.grade > 3 && result.grade <= 4) {
+        distribution['3.1-4.0']++;
+      } else if (result.grade > 4 && result.grade <= 5) {
+        distribution['4.1-5.0']++;
+      } else if (result.grade > 5 && result.grade <= 6) {
+        distribution['5.1-6.0']++;
+      }
+    });
+
+    return res.status(200).json(distribution);
+  } catch (error) {
+    logger.error("" + error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
