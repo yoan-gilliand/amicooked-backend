@@ -175,4 +175,29 @@ router.get('/distribution', isAuthenticated, async (req, res) => {
   }
 });
 
+// Rotue pour récupérer le nombre de paris d'un utilisateur, le nombre de résultats entrés ainsi que le nombre de prédictions exactes
+router.get('/stats', isAuthenticated, async (req, res) => {
+  const { username } = req.user;
+
+  try {
+    // Récupérer le nombre de paris de l'utilisateur
+    const betsCount = await db.getBetCountByUsername(username);
+
+    // Récupérer le nombre de résultats de l'utilisateur
+    const resultsCount = await db.getResultCountByUsername(username);
+
+    // Récupérer le nombre de paris exacts
+    const exactBetsCount = await db.getExactBetCountByUsername(username);
+
+    return res.status(200).json({
+      betsCount,
+      resultsCount,
+      exactBetsCount,
+    });
+  } catch (error) {
+    logger.error("" + error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

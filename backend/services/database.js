@@ -239,6 +239,35 @@ const getResultsByUsername = (username) => {
   return rows || [];
 };
 
+// Obtenir le nombre de paris d'un utilisateur
+const getBetCountByUsername = (username) => {
+  const stmt = db.prepare(`
+    SELECT COUNT(*) as count FROM bet WHERE id_user = ?
+  `);
+  const row = stmt.get(username);
+  return row ? row.count : 0;
+};
+
+// Obtenir le nombre de résultats d'un utilisateur
+const getResultCountByUsername = (username) => {
+  const stmt = db.prepare(`
+    SELECT COUNT(*) as count FROM result WHERE id_user = ?
+  `);
+  const row = stmt.get(username);
+  return row ? row.count : 0;
+};
+
+// Obtenir le nombre de paris exacts d'un utilisateur
+const getExactBetCountByUsername = (username) => {
+  const stmt = db.prepare(`
+    SELECT COUNT(*) as count FROM bet b
+    JOIN result r ON b.id_exam = r.id_exam AND b.id_user = r.id_user
+    WHERE b.grade = r.grade AND b.id_user = ?
+  `);
+  const row = stmt.get(username);
+  return row ? row.count : 0;
+};
+
 
 module.exports = {
   createClass,
@@ -255,4 +284,7 @@ module.exports = {
   getUpcomingExams,
   getPastExamsWithoutResults,
   getResultsByUsername,
+  getBetCountByUsername,
+  getResultCountByUsername,
+  getExactBetCountByUsername,
 };
