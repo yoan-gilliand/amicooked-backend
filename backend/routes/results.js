@@ -98,4 +98,36 @@ router.get('/score-evolution', isAuthenticated, async (req, res) => {
   }
 });
 
+// Route pour récupérer un comparatif du pari/résultat de chaque examen
+router.get('/comparative', isAuthenticated, async (req, res) => {
+  const { username } = req.user;
+
+  try {
+    // Récupérer tous les résultats de l'utilisateur
+    const results = await db.getResultsByUsername(username);
+
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: 'No results found for this user' });
+    }
+
+    // Trier les résultats par date croissante
+    results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculer le score pour chaque résultat
+    const scores = results.map(result => {
+      const bet = db.getBetByExamIdAndUsername(result.id, username);
+      return {
+        date: result.date,
+        bet: bet ? bet.grade : 0,
+        result: result.grade,
+      };
+    });
+
+    return res.status(200).json(scores);
+  } catch (error) {
+    logger.error("" + error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
