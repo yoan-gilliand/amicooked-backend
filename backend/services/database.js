@@ -122,7 +122,6 @@ const getUserByEmail = (email) => {
 
 // Ajouter un pari (bet)
 const createBet = (examId, grade, username) => {
-  console.log('Creating bet:', { examId, grade, username });
   try {
     const stmt = db.prepare(`
       INSERT INTO bet (id_exam, id_user, grade)

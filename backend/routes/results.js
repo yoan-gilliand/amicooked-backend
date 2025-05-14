@@ -31,9 +31,12 @@ router.post('/', isAuthenticated, validateResultForm, async (req, res) => {
       scoreToAdd = Math.max(0, 10 - Math.round(2 * Math.abs(bet.grade - newBet.grade)));
     }
 
+    // Récupérer le score actuel de l'utilisateur
+    const user = await db.getUserByUsername(username);
+
     // Mettre à jour le score uniquement si scoreToAdd > 0
-    if (scoreToAdd > 0) {
-      await db.updateUserScore(username, score + scoreToAdd);
+    if (user && scoreToAdd > 0) {
+      await db.updateUserScore(username, user.score + scoreToAdd);
     }
 
     return res.status(201).json({ message: 'Result created successfully', score : scoreToAdd });

@@ -39,4 +39,21 @@ router.get('/classinfos', isAuthenticated, async (req, res) => {
   }
 });
 
+// Get score of the current user
+router.get('/score', isAuthenticated, async (req, res) => {
+  try {
+    // Récupérer le score de l'utilisateur
+    const user = await db.getUserByUsername(req.user.username);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ score: user.score });
+  } catch (error) {
+    logger.error('' + error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
