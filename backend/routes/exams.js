@@ -34,11 +34,11 @@ router.post('/', isAdmin, validateExamForm, async (req, res) => {
 
 // Route pour récupérer tous les examens à venir pour lesquels l'utilisateu n'a pas encore parié
 router.get('/upcoming', isAuthenticated, async (req, res) => {
-  const { username } = req.user;
+  const { username, classId } = req.user;
 
   try {
     // Récupérer tous les examens à venir pour lesquels l'utilisateur n'a pas encore parié
-    const exams = await db.getUpcomingExams(username);
+    const exams = await db.getUpcomingExams(username, classId);
 
     return res.status(200).json(exams);
   } catch (error) {
@@ -51,6 +51,8 @@ router.get('/upcoming', isAuthenticated, async (req, res) => {
 router.get('/past', isAuthenticated, async (req, res) => {
   const { username } = req.user;
 
+
+  // convert classId to integer
   try {
     // Récupérer tous les examens passés mais qui n'ont pas encore de résultats
     const exams = await db.getPastExamsWithoutResults(username);

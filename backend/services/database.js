@@ -206,27 +206,39 @@ const getUsersByClassId = (classId) => {
 };
 
 // Obtenir tous les examens pour lesquels l'utilisateur n'a pas encore parié
-const getUpcomingExams = (username) => {
+const getUpcomingExams = (username, classId) => {
   const stmt = db.prepare(`
-    SELECT e.id, e.name, e.date FROM exam e
-    LEFT JOIN bet b ON e.id = b.id_exam AND b.id_user = ?
-    WHERE b.id_user IS NULL
+      SELECT e.id, e.name, e.date
+      FROM exam e
+      WHERE e.id_classroom = ?
+        AND NOT EXISTS (
+          SELECT 1
+          FROM bet b
+          WHERE b.id_exam = e.id AND b.id_user = ?
+      )
+      ORDER BY e.date ASC
+  `);
+  const rows = stmt.all(classId, username);
+  return rows || [];
+};
+
+// Obtenir tous les examens pour lesquels l'utilisateur a parié mais n'a pas encore de résultats
+const getPastExamsWithoutResults = (username) => {
+  const stmt = db.prepare(`
+      SELECT b.id_exam, e.name, e.date, b.grade AS predicted_grade
+      FROM bet b
+               JOIN exam e ON b.id_exam = e.id
+      WHERE b.id_user = ?
+        AND NOT EXISTS (
+          SELECT 1
+          FROM result r
+          WHERE r.id_exam = b.id_exam AND r.id_user = b.id_user
+      )
+      ORDER BY e.date ASC
   `);
   const rows = stmt.all(username);
   return rows || [];
 };
-
-// Obtenir tous les examens qui n'ont pas encore de résultats
-const getPastExamsWithoutResults = (username) => {
-  const stmt = db.prepare(`
-    SELECT e.id, e.name, e.date FROM exam e
-    JOIN bet b ON e.id = b.id_exam AND b.id_user = ?
-    LEFT JOIN result r ON e.id = r.id_exam AND r.id_user = ?
-    WHERE r.id_user IS NULL
-  `);
-  const rows = stmt.all(username, username);
-  return rows || [];
-}
 
 // Obtenir tous les résultats d'un utilisateur
 const getResultsByUsername = (username) => {
