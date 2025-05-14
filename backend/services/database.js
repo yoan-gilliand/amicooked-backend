@@ -221,12 +221,13 @@ const getUpcomingExams = (username) => {
 const getPastExamsWithoutResults = (username) => {
   const stmt = db.prepare(`
     SELECT e.id, e.name, e.date FROM exam e
+    JOIN bet b ON e.id = b.id_exam AND b.id_user = ?
     LEFT JOIN result r ON e.id = r.id_exam AND r.id_user = ?
     WHERE r.id_user IS NULL
   `);
-  const rows = stmt.all(username);
+  const rows = stmt.all(username, username);
   return rows || [];
-};
+}
 
 // Obtenir tous les résultats d'un utilisateur
 const getResultsByUsername = (username) => {
