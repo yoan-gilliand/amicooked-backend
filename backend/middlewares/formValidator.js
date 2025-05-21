@@ -58,6 +58,8 @@ const validateDate = (date) => {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date))
     return errorMsg('Date must be in YYYY-MM-DD format');
+  if (isNaN(new Date(date).getTime()))
+    return errorMsg('Date must be a valid date');
   return null;
 };
 
