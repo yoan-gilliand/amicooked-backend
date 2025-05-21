@@ -5,7 +5,7 @@ const db = require('../services/database');
 const {
   validateBetForm
 } = require('../middlewares/formValidator');
-const isAuthenticated = require('../middlewares/isAdmin');
+const isAuthenticated = require('../middlewares/isAuthenticated');
 
 // Route de connexion
 router.post('/', isAuthenticated, validateBetForm, async (req, res) => {
