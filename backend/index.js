@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 const cors = require('cors');
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: 'https://amicooked-frontend-d2ps.onrender.com',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
