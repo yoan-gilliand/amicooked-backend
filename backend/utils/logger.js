@@ -5,7 +5,7 @@ const DailyRotateFile = require('winston-daily-rotate-file');
 const logger = createLogger({
   level: 'info',
   format: combine(timestamp(), prettyPrint()),
-  transports: [
+  /*transports: [
     new DailyRotateFile({
       filename:
         `${process.env.LOG_PATH}error-%DATE%.log` || 'logs/error-%DATE%.log',
@@ -24,7 +24,7 @@ const logger = createLogger({
       maxSize: '20m',
       maxFiles: '14d',
     }),
-  ],
+  ],*/
 });
 
 module.exports = logger;
