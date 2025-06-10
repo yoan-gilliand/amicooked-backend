@@ -3,8 +3,21 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 const cors = require('cors');
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:8080',
+  'https://example.com', // Remplace par ton URL réelle
+];
+
 const corsOptions = {
-  origin: 'https://amicooked-frontend-d2ps.onrender.com',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
