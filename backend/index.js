@@ -7,7 +7,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:8080',
-  'https://example.com', // Remplace par ton URL réelle
+  'https://amicooked-frontend-d2ps.onrender.com,
 ];
 
 const corsOptions = {
